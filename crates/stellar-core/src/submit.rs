@@ -26,7 +26,7 @@ pub async fn sign_and_submit(rpc_url: &str, network: Network, keypair: &Keypair,
     submit_signed_xdr(rpc_url, network, &signed_xdr).await
 }
 
-async fn submit_signed_xdr(rpc_url: &str, network: Network, signed_xdr: &str) -> Result<String> {
+pub async fn submit_signed_xdr(rpc_url: &str, network: Network, signed_xdr: &str) -> Result<String> {
     let tx = stellar_baselib::transaction::Transaction::from_xdr_envelope(signed_xdr, network.passphrase());
     let server = rpc_server(rpc_url)?;
     let result = server

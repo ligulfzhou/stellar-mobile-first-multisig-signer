@@ -1,12 +1,7 @@
-//! Stellar Vault testnet constants (from
-//! Stellar_Vault-fork/dashboard/src/config.ts).
+//! Network and fee defaults for Soroban vault operations.
 
-pub const FACTORY_CONTRACT_ID: &str = "CCNGOW6UCZKELBAR377HDHWAJJLKD6SJHUFCDT4UM6M2AYPSOEBYLDVA";
-pub const REGISTRY_CONTRACT_ID: &str = "CDJCQNXYTWZ3VF2FL2MCWMZB6RPQYRAFNNO6KEKW2MN7ALXGB5SGYTJ4";
-pub const NATIVE_TOKEN: &str = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+pub const NATIVE_TOKEN_TESTNET: &str = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+pub const NATIVE_TOKEN_MAINNET: &str = "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA";
 
-/// Public test vault from Stellar Vault docs (testnet).
-pub const TEST_VAULT: &str = "CBJ4BFOUDMQWFPCBALQTO2565STNGFMGQWDYVQ7MBWRZF5WSI2Z4VT5W";
-
-/// Default Soroban resource fee for vault write operations (matches dashboard).
+/// Default Soroban resource fee for vault write operations.
 pub const DEFAULT_WRITE_FEE: u32 = 10_000_000;

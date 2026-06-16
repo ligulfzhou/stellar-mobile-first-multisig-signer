@@ -1,0 +1,22 @@
+[package]
+name = "vault-signer-ffi"
+description = "UniFFI bindings for multisig vault mobile signer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "vault_signer_ffi"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+
+[dependencies]
+stellar-core = { path = "../stellar-core" }
+vault-client = { path = "../vault-client" }
+uniffi = { workspace = true, features = ["cli"] }
+thiserror.workspace = true
+tokio.workspace = true
+anyhow.workspace = true

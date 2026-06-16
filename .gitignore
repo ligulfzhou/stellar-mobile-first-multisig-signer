@@ -1,4 +1,6 @@
 /target/
+/bindings/
+contracts/target/
 **/*.rs.bk
 .DS_Store
 .env

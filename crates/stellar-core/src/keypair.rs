@@ -4,7 +4,7 @@ use {
     soroban_client::keypair::{Keypair as SorobanKeypair, KeypairBehavior},
 };
 
-/// Stellar Ed25519 keypair wrapper (adapted from stellar-arb/src/account.rs).
+/// Stellar Ed25519 keypair with SEP-0005 mnemonic derivation.
 pub struct Keypair(SorobanKeypair);
 
 impl Keypair {

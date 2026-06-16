@@ -1,6 +1,6 @@
 [package]
 name = "vault-signer-cli"
-description = "CLI for Stellar Vault mobile signer development"
+description = "CLI for multisig vault signer"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

@@ -5,6 +5,14 @@ pub enum Network {
 }
 
 impl Network {
+    pub fn parse(s: &str) -> anyhow::Result<Self> {
+        match s.to_lowercase().as_str() {
+            "testnet" | "test" => Ok(Network::Testnet),
+            "mainnet" | "public" => Ok(Network::Mainnet),
+            other => Err(anyhow::anyhow!("unknown network: {} (use testnet or mainnet)", other)),
+        }
+    }
+
     pub fn passphrase(self) -> &'static str {
         match self {
             Network::Testnet => "Test SDF Network ; September 2015",

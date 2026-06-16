@@ -6,7 +6,7 @@ use {
 };
 
 #[derive(Parser)]
-#[command(name = "vault-signer", about = "Stellar Vault mobile signer CLI (Phase 0)")]
+#[command(name = "vault-signer", about = "Multisig vault signer CLI")]
 struct Cli {
     /// Soroban RPC URL
     #[arg(long, env = "SOROBAN_RPC_URL")]
@@ -30,6 +30,11 @@ enum Commands {
     Config,
     /// List vault signers
     Signers,
+    /// List all proposals
+    Proposals {
+        #[arg(long)]
+        pending_only: bool,
+    },
     /// Show proposal status
     Proposal {
         #[arg(long)]
@@ -91,6 +96,23 @@ async fn main() -> Result<()> {
             println!("Signers ({}):", signers.len());
             for (i, s) in signers.iter().enumerate() {
                 println!("  {}. {}", i + 1, s);
+            }
+        }
+        Commands::Proposals { pending_only } => {
+            let proposals = if pending_only {
+                client.reader().list_pending_proposals().await?
+            } else {
+                client.reader().list_proposals().await?
+            };
+            if proposals.is_empty() {
+                println!("No proposals.");
+            } else {
+                for p in proposals {
+                    println!(
+                        "#{} {:?} approvals={} rejections={} status={}",
+                        p.id, p.proposal_type, p.approval_count, p.rejection_count, p.status
+                    );
+                }
             }
         }
         Commands::Proposal { id } => {

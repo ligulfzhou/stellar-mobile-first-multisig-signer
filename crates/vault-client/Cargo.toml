@@ -1,6 +1,6 @@
 [package]
 name = "vault-client"
-description = "Stellar Vault Soroban contract client (read + write)"
+description = "Soroban multisig vault contract client"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

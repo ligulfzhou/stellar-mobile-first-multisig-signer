@@ -42,6 +42,33 @@ impl VaultReader<'_> {
             .await?;
         parse_proposal_core(&val)
     }
+
+    /// List all proposals (1..=proposal_count) with on-chain status.
+    pub async fn list_proposals(&self) -> Result<Vec<ProposalSummary>> {
+        let config = self.get_config().await?;
+        let mut out = Vec::with_capacity(config.proposal_count as usize);
+        for id in 1..=config.proposal_count {
+            let core = self.get_proposal(id).await?;
+            out.push(ProposalSummary {
+                id,
+                proposal_type: core.proposal_type,
+                approval_count: core.approval_count,
+                rejection_count: core.rejection_count,
+                status: core.status_label().to_string(),
+            });
+        }
+        Ok(out)
+    }
+
+    /// Pending proposals only (not executed, not rejected).
+    pub async fn list_pending_proposals(&self) -> Result<Vec<ProposalSummary>> {
+        Ok(self
+            .list_proposals()
+            .await?
+            .into_iter()
+            .filter(|p| p.status == "pending")
+            .collect())
+    }
 }
 
 fn parse_vault_config(val: &ScVal) -> Result<VaultConfig> {

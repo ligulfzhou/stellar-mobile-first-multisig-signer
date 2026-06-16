@@ -1,50 +1,75 @@
 # Vault Signer
 
-Mobile-first Stellar Vault signer infrastructure. Rust core extracted from [stellar-arb](https://github.com/ligulfzhou) and [stellar-dex-aggregator](https://github.com/ligulfzhou), targeting Soroban vault multisig on iOS/Android (UniFFI in a later phase).
+Mobile-first multisig treasury signer for Stellar Soroban. Rust core with UniFFI bindings for iOS and Android.
 
-## Workspace
+## Repository layout
 
-| Crate | Purpose |
-|-------|---------|
-| `stellar-core` | Keys, RPC simulate/prepare, ScVal helpers, sign/submit |
-| `vault-client` | Stellar Vault contract read/write (approve, reject, get_config, …) |
-| `vault-signer-cli` | Phase 0 CLI to validate against testnet |
+```
+multisig-wallet/
+├── contracts/          # Soroban: vault, factory, registry
+├── crates/
+│   ├── stellar-core/   # Keys, RPC, tx build/sign/submit
+│   ├── vault-client/   # Vault contract client
+│   ├── vault-signer-cli/
+│   └── vault-signer-ffi/   # UniFFI → Swift/Kotlin
+├── bindings/           # Generated mobile bindings (just ffi)
+└── ios/                # SwiftUI app (WIP)
+```
 
 ## Build
 
 ```bash
+# Rust signer + CLI
 cargo build --release
+just build
+
+# Soroban contracts (requires stellar CLI)
+just contract-build
+just contract-test
 ```
 
-## CLI usage (testnet)
+## CLI
 
-Set your vault contract address (from [Stellar Vault dashboard](https://stellar-vault-eta.vercel.app/) or factory):
+Point at a deployed vault contract (`C...` address):
 
 ```bash
-# Example: public test vault from Stellar Vault docs
-export VAULT_ADDRESS=CBJ4BFOUDMQWFPCBALQTO2565STNGFMGQWDYVQ7MBWRZF5WSI2Z4VT5W
-export STELLAR_SECRET=S...your_signer_secret...
+export VAULT_ADDRESS=C...your_deployed_vault...
+export STELLAR_SECRET=S...signer_secret...   # for approve/reject only
 
-# Read vault state
 cargo run -p vault-signer-cli -- config
 cargo run -p vault-signer-cli -- signers
+cargo run -p vault-signer-cli -- proposals
+cargo run -p vault-signer-cli -- proposals --pending-only
 cargo run -p vault-signer-cli -- proposal --id 1
-
-# Approve proposal #1
-cargo run -p vault-signer-cli -- approve --id 1
+cargo run -p vault-signer-cli -- approve --id 2
 ```
 
-## Testnet defaults
+Deploy a vault first — see [contracts/README.md](contracts/README.md).
 
-From Stellar Vault fork (`dashboard/src/config.ts`):
+## UniFFI (mobile)
+
+```bash
+just ffi        # bindings/swift + bindings/kotlin
+just ffi-test   # needs VAULT_ADDRESS env
+```
+
+```swift
+let signer = VaultSigner()
+let pending = try signer.listPendingProposals(
+    vault: vaultAddress,
+    network: "testnet",
+    rpcUrl: nil
+)
+```
+
+## Testnet
 
 - RPC: `https://soroban-testnet.stellar.org`
-- Factory: `CCNGOW6UCZKELBAR377HDHWAJJLKD6SJHUFCDT4UM6M2AYPSOEBYLDVA`
-- Registry: `CDJCQNXYTWZ3VF2FL2MCWMZB6RPQYRAFNNO6KEKW2MN7ALXGB5SGYTJ4`
+- Horizon: `https://horizon-testnet.stellar.org`
 
-## Next steps
+## Roadmap
 
-1. UniFFI bindings (`vault-signer-ffi` crate)
-2. Swift/Kotlin shell apps
-3. Push notifications + deep links for pending proposals
-4. Own Soroban vault contract (replace `vault-client` backend)
+1. iOS SwiftUI shell (Keychain, pending list, approve flow)
+2. Android Compose shell
+3. Push notifications + deep links
+4. Contract audit + mainnet deploy

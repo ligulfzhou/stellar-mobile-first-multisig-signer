@@ -38,8 +38,7 @@ impl RpcClient {
         &self.server
     }
 
-    /// Read-only contract call via simulate (adapted from
-    /// stellar-arb/src/stellar_client.rs).
+    /// Read-only contract call via RPC simulate.
     pub async fn simulate_contract_call(
         &self,
         contract_address: &str,

@@ -19,5 +19,17 @@ fmt:
 test:
     cargo +nightly fmt
     cargo test -- --test-threads=1
-    # cargo build -j1
-    # ./target/debug/sui-arb test
+
+contract-build:
+    cd contracts && stellar contract build
+
+contract-test:
+    cd contracts && cargo test
+
+# Build UniFFI library and generate Swift/Kotlin bindings
+ffi:
+    cargo build -p vault-signer-ffi
+    bash scripts/generate-bindings.sh
+
+ffi-test:
+    cargo test -p vault-signer-ffi -- --nocapture

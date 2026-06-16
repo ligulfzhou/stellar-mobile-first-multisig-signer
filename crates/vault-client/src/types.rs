@@ -38,6 +38,15 @@ impl ProposalType {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ProposalSummary {
+    pub id: u64,
+    pub proposal_type: ProposalType,
+    pub approval_count: u32,
+    pub rejection_count: u32,
+    pub status: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ProposalCore {
     pub proposal_type: ProposalType,
     pub approval_count: u32,
