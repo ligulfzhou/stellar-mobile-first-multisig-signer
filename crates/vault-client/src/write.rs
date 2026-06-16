@@ -1,13 +1,11 @@
 use {
-    crate::{config::DEFAULT_WRITE_FEE, VaultClient},
-    anyhow::{anyhow, Result},
-    soroban_client::{
-        contract::{ContractBehavior, Contracts},
-        transaction::{AccountBehavior, TransactionBehavior},
-        transaction_builder::{TransactionBuilder, TransactionBuilderBehavior, TIMEOUT_INFINITE},
-        xdr::{Limits, WriteXdr},
+    crate::{config::DEFAULT_WRITE_FEE, tx::build_invoke_tx, VaultClient},
+    anyhow::Result,
+    soroban_client::xdr::ScVal,
+    stellar_core::{
+        address_to_scval, bool_to_scval, i128_to_scval, sign_and_submit, symbol_to_scval, u32_to_scval,
+        u64_to_scval, Keypair,
     },
-    stellar_core::{address_to_scval, fetch_account_sequence, u64_to_scval, Keypair},
 };
 
 pub struct VaultWriter<'a> {
@@ -55,32 +53,115 @@ impl VaultWriter<'_> {
         sign_and_submit(&self.client.rpc_url, self.client.network, keypair, &unsigned).await
     }
 
+    /// Propose a native/token transfer (ProposalType::Transfer = 0).
+    pub async fn propose_transfer(
+        &self,
+        keypair: &Keypair,
+        token: &str,
+        recipient: &str,
+        amount: i128,
+    ) -> Result<String> {
+        use stellar_core::sign_and_submit;
+
+        let proposer = keypair.public_key();
+        let unsigned = self
+            .build_propose_transfer_tx(&proposer, token, recipient, amount)
+            .await?;
+        sign_and_submit(&self.client.rpc_url, self.client.network, keypair, &unsigned).await
+    }
+
+    pub async fn build_propose_transfer_tx(
+        &self,
+        proposer: &str,
+        token: &str,
+        recipient: &str,
+        amount: i128,
+    ) -> Result<String> {
+        self.build_contract_tx(
+            proposer,
+            "propose",
+            vec![
+                address_to_scval(proposer)?,
+                u32_to_scval(0), // Transfer
+                address_to_scval(token)?,
+                address_to_scval(recipient)?,
+                i128_to_scval(amount),
+                u64_to_scval(0),
+                u64_to_scval(0),
+                u64_to_scval(0),
+                u64_to_scval(0),
+                bool_to_scval(false),
+                symbol_to_scval("transfer")?,
+            ],
+            DEFAULT_WRITE_FEE,
+        )
+        .await
+    }
+
+    /// Execute an approved transfer proposal.
+    pub async fn execute_transfer(
+        &self,
+        keypair: &Keypair,
+        proposal_id: u64,
+        token: &str,
+        recipient: &str,
+        amount: i128,
+    ) -> Result<String> {
+        use stellar_core::sign_and_submit;
+
+        let executor = keypair.public_key();
+        let unsigned = self
+            .build_execute_transfer_tx(&executor, proposal_id, token, recipient, amount)
+            .await?;
+        sign_and_submit(&self.client.rpc_url, self.client.network, keypair, &unsigned).await
+    }
+
+    pub async fn build_execute_transfer_tx(
+        &self,
+        executor: &str,
+        proposal_id: u64,
+        token: &str,
+        recipient: &str,
+        amount: i128,
+    ) -> Result<String> {
+        self.build_contract_tx(
+            executor,
+            "execute",
+            vec![
+                address_to_scval(executor)?,
+                u64_to_scval(proposal_id),
+                u32_to_scval(0), // Transfer
+                address_to_scval(token)?,
+                address_to_scval(recipient)?,
+                i128_to_scval(amount),
+                u64_to_scval(0),
+                u64_to_scval(0),
+                u64_to_scval(0),
+                u64_to_scval(0),
+                bool_to_scval(false),
+            ],
+            DEFAULT_WRITE_FEE,
+        )
+        .await
+    }
+
     async fn build_contract_tx(
         &self,
         signer: &str,
         function: &str,
-        args: Vec<soroban_client::xdr::ScVal>,
+        args: Vec<ScVal>,
         fee: u32,
     ) -> Result<String> {
-        let contract = Contracts::new(&self.client.vault).map_err(|e| anyhow!("invalid vault contract: {}", e))?;
-        let op = contract.call(function, Some(args));
-
-        let sequence = fetch_account_sequence(&self.client.horizon_url, signer).await?;
-        let mut account = soroban_client::account::Account::new(signer, &sequence.to_string())
-            .map_err(|e| anyhow!("invalid account: {}", e))?;
-
-        let tx = TransactionBuilder::new(&mut account, self.client.network.passphrase(), None)
-            .fee(fee)
-            .add_operation(op)
-            .set_timeout(TIMEOUT_INFINITE)
-            .map_err(|e| anyhow!("timeout: {}", e))?
-            .build();
-
-        let prepared = self.client.rpc.prepare_transaction(&tx).await?;
-        let envelope = prepared.to_envelope().map_err(|e| anyhow!("to_envelope: {}", e))?;
-
-        envelope
-            .to_xdr_base64(Limits::none())
-            .map_err(|e| anyhow!("XDR encode: {:?}", e))
+        build_invoke_tx(
+            &self.client.rpc,
+            self.client.network,
+            &self.client.horizon_url,
+            &self.client.vault,
+            signer,
+            function,
+            args,
+            fee,
+        )
+        .await
     }
 }

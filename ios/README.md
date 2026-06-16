@@ -1,41 +1,56 @@
 # iOS App (SwiftUI)
 
-Minimal signer UI for pending proposal review and approve.
+Native signer for reviewing pending proposals and approving/rejecting on-chain.
 
-## Setup
+## Quick start
 
-1. Generate bindings from repo root:
+```bash
+# From repo root — bindings, static libs, Xcode project
+just ios-setup
 
-   ```bash
-   just ffi
-   ```
+open ios/VaultSigner.xcodeproj
+```
 
-2. Create an Xcode iOS App project (or open these sources in a new target).
+Select an iOS Simulator and Run.
 
-3. Add to the target:
-   - `ios/VaultSigner/*.swift`
-   - `bindings/swift/vault_signer_ffi.swift`
-   - `bindings/swift/vault_signer_ffiFFI.h` (Bridging Header)
-   - Link `target/debug/libvault_signer_ffi.dylib` (device builds need `cargo build --release` for arm64 + XCFramework — see below)
+### Tabs
 
-4. Build Settings:
-   - **Header Search Paths**: `$(PROJECT_DIR)/../../bindings/swift`
-   - **Library Search Paths**: `$(PROJECT_DIR)/../../target/debug`
-   - **Other Linker Flags**: `-lvault_signer_ffi`
+| Tab | Purpose |
+|-----|---------|
+| **Vault** | Dashboard, pending proposals, approve/reject |
+| **Create** | Deploy new N-of-M vault via factory |
+| **Settings** | Keychain key, vault/factory/RPC, demo vault |
 
-5. Run on simulator, enter vault `C...` address, pull to refresh pending proposals.
+The app ships with the demo testnet vault pre-filled. Import your signer secret (S...) in **Settings**, then use **Vault** to sign or **Create** to deploy a new treasury.
+
+## What’s included
+
+| Piece | Location |
+|-------|----------|
+| SwiftUI UI | `ios/VaultSigner/*.swift` |
+| UniFFI Swift | `bindings/swift/vault_signer_ffi.swift` |
+| Rust static lib (sim / device) | `ios/Vendor/{ios-sim,ios}/` |
+| Xcode project spec | `ios/project.yml` |
+
+## Rebuild Rust after API changes
+
+```bash
+just ffi          # regenerate Swift bindings
+just ios-lib      # rebuild static libraries only
+```
+
+Then rebuild in Xcode.
 
 ## Production notes
 
-- Store secrets in **Keychain**, never UserDefaults
-- Ship Rust as **XCFramework** built for `aarch64-apple-ios` and simulator
-- Use `build_approve_tx` + Secure Enclave signing for hardened flows
+- Secrets are stored in **Keychain** (`KeychainStore.swift`)
+- Ship Rust as **XCFramework** for App Store (see `scripts/build-ios-lib.sh`)
+- Hardened flow: `buildApproveTx` + Secure Enclave / passkey signing
 
-## XCFramework (later)
+## CLI parity
 
-```bash
-# Example — adjust targets for your toolchain
-cargo build -p vault-signer-ffi --release --target aarch64-apple-ios
-cargo build -p vault-signer-ffi --release --target aarch64-apple-ios-sim
-# xcodebuild -create-xcframework ...
+Same vault as `just e2e-testnet`:
+
+```
+CCJ3AAZCSG3MXY3WQ4BX6XZQBSV4T7QERHVP5LKKIQDHTXJE5JVBXP5Q
 ```

@@ -1,0 +1,3 @@
+# Android linker is set via env in scripts/build-android-lib.sh:
+#   CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER
+#   CARGO_TARGET_AARCH64_LINUX_ANDROID_AR

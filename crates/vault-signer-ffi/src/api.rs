@@ -1,7 +1,7 @@
 use {
     crate::{error::SignerError, runtime::block_on, types::{FfiProposal, FfiProposalSummary, FfiVaultConfig}},
     stellar_core::{network::Network, poll_transaction, sign_transaction_xdr, submit_signed_xdr, Keypair},
-    vault_client::VaultClient,
+    vault_client::{FactoryClient, VaultClient},
 };
 
 fn rpc_url_for(network: &str, rpc_url: Option<String>) -> Result<String, SignerError> {
@@ -179,6 +179,29 @@ impl VaultSigner {
             let hash = client.writer().reject(&kp, proposal_id).await?;
             poll_transaction(&url, &hash).await?;
             Ok(hash)
+        })
+    }
+
+    /// Deploy a new N-of-M vault via the factory contract. Returns the new vault `C...` address.
+    pub fn create_vault(
+        &self,
+        factory: String,
+        network: String,
+        secret: String,
+        name: String,
+        signers: Vec<String>,
+        threshold: u32,
+        rpc_url: Option<String>,
+    ) -> Result<String, SignerError> {
+        block_on(async {
+            let net = Network::parse(&network)?;
+            let url = rpc_url_for(&network, rpc_url)?;
+            let kp = Keypair::from_secret(&secret)?;
+            let client = FactoryClient::new(&factory, &url, net)?;
+            client
+                .create_vault(&kp, &name, &signers, threshold)
+                .await
+                .map_err(SignerError::from)
         })
     }
 }

@@ -13,3 +13,4 @@ soroban-client.workspace = true
 anyhow.workspace = true
 tokio.workspace = true
 serde.workspace = true
+futures = "0.3"

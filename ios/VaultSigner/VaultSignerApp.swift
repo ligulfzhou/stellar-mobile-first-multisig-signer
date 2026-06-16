@@ -6,7 +6,7 @@ struct VaultSignerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
                 .environmentObject(model)
         }
     }

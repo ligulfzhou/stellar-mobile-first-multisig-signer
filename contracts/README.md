@@ -29,4 +29,20 @@ stellar contract deploy \
   --source YOUR_ACCOUNT
 ```
 
-After deploy, set `VAULT_ADDRESS` for the CLI and mobile signer.
+## Deploy (testnet)
+
+From repo root (uses `admin` identity):
+
+```bash
+chmod +x scripts/deploy-testnet.sh
+just deploy-testnet
+```
+
+This will:
+
+1. Upload `multisig_vault.wasm`
+2. Deploy + initialize `multisig_vault_factory`
+3. `create_vault` with admin + alice (2-of-2), fee = 0
+4. Write addresses to `deploy/testnet.json`
+
+Override: `VAULT_NAME=myteam THRESHOLD=1 SOURCE=admin just deploy-testnet`

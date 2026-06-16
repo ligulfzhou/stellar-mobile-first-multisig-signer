@@ -13,59 +13,66 @@ multisig-wallet/
 │   ├── vault-signer-cli/
 │   └── vault-signer-ffi/   # UniFFI → Swift/Kotlin
 ├── bindings/           # Generated mobile bindings (just ffi)
+├── deploy/             # Local deployment records (gitignored)
 └── ios/                # SwiftUI app (WIP)
 ```
 
 ## Build
 
 ```bash
-# Rust signer + CLI
 cargo build --release
 just build
 
 # Soroban contracts (requires stellar CLI)
 just contract-build
-just contract-test
 ```
+
+## Deploy (testnet)
+
+Uses local Stellar identity `admin` (and `alice` as second signer for 2-of-2):
+
+```bash
+just deploy-testnet
+# → deploy/testnet.json with factory_id + vault_id
+```
+
+Default RPC is Gateway.fm (`soroban-rpc.testnet.stellar.gateway.fm`). The official SDF endpoint may be unreachable in some networks. Override:
+
+```bash
+RPC_URL=https://rpc.ankr.com/stellar_testnet_soroban just deploy-testnet
+```
+
+Then verify with CLI:
+
+```bash
+export VAULT_ADDRESS=$(jq -r .vault_id deploy/testnet.json)
+cargo run -p vault-signer-cli -- config
+cargo run -p vault-signer-cli -- signers
+```
+
+Details: [contracts/README.md](contracts/README.md)
 
 ## CLI
 
-Point at a deployed vault contract (`C...` address):
-
 ```bash
-export VAULT_ADDRESS=C...your_deployed_vault...
-export STELLAR_SECRET=S...signer_secret...   # for approve/reject only
+export VAULT_ADDRESS=C...
+export STELLAR_SECRET=S...   # vault signer, for approve/reject
 
-cargo run -p vault-signer-cli -- config
-cargo run -p vault-signer-cli -- signers
-cargo run -p vault-signer-cli -- proposals
 cargo run -p vault-signer-cli -- proposals --pending-only
-cargo run -p vault-signer-cli -- proposal --id 1
-cargo run -p vault-signer-cli -- approve --id 2
+cargo run -p vault-signer-cli -- approve --id 1
 ```
-
-Deploy a vault first — see [contracts/README.md](contracts/README.md).
 
 ## UniFFI (mobile)
 
 ```bash
-just ffi        # bindings/swift + bindings/kotlin
-just ffi-test   # needs VAULT_ADDRESS env
-```
-
-```swift
-let signer = VaultSigner()
-let pending = try signer.listPendingProposals(
-    vault: vaultAddress,
-    network: "testnet",
-    rpcUrl: nil
-)
+just ffi
+just ffi-test   # optional; set VAULT_ADDRESS
 ```
 
 ## Testnet
 
 - RPC: `https://soroban-testnet.stellar.org`
-- Horizon: `https://horizon-testnet.stellar.org`
+- Native XLM (SAC): `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
 
 ## Roadmap
 

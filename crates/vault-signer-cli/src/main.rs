@@ -55,6 +55,32 @@ enum Commands {
         #[arg(long, env = "STELLAR_SECRET")]
         secret: String,
     },
+    /// Propose a token transfer (requires --secret)
+    Propose {
+        /// Token contract (native XLM SAC on testnet by default)
+        #[arg(long, default_value = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC")]
+        token: String,
+        #[arg(long)]
+        recipient: String,
+        /// Amount in stroops (1 XLM = 10_000_000)
+        #[arg(long)]
+        amount: i128,
+        #[arg(long, env = "STELLAR_SECRET")]
+        secret: String,
+    },
+    /// Execute an approved proposal (requires --secret)
+    Execute {
+        #[arg(long)]
+        id: u64,
+        #[arg(long, default_value = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC")]
+        token: String,
+        #[arg(long)]
+        recipient: String,
+        #[arg(long)]
+        amount: i128,
+        #[arg(long, env = "STELLAR_SECRET")]
+        secret: String,
+    },
     /// Derive public key from mnemonic (dev helper)
     DeriveKey {
         #[arg(long)]
@@ -138,6 +164,40 @@ async fn main() -> Result<()> {
             println!("Submitted: {}", hash);
             poll_transaction(&rpc_url, &hash).await?;
             println!("Confirmed on-chain.");
+        }
+        Commands::Propose {
+            token,
+            recipient,
+            amount,
+            secret,
+        } => {
+            let kp = Keypair::from_secret(&secret)?;
+            println!("Proposer: {}", kp.public_key());
+            let hash = client
+                .writer()
+                .propose_transfer(&kp, &token, &recipient, amount)
+                .await?;
+            println!("Submitted: {}", hash);
+            poll_transaction(&rpc_url, &hash).await?;
+            let cfg = client.reader().get_config().await?;
+            println!("Proposal #{} created.", cfg.proposal_count);
+        }
+        Commands::Execute {
+            id,
+            token,
+            recipient,
+            amount,
+            secret,
+        } => {
+            let kp = Keypair::from_secret(&secret)?;
+            println!("Executor: {}", kp.public_key());
+            let hash = client
+                .writer()
+                .execute_transfer(&kp, id, &token, &recipient, amount)
+                .await?;
+            println!("Submitted: {}", hash);
+            poll_transaction(&rpc_url, &hash).await?;
+            println!("Transfer executed on-chain.");
         }
         Commands::DeriveKey { mnemonic, index } => {
             let kp = Keypair::from_mnemonic(&mnemonic, index)?;

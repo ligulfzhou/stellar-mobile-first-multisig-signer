@@ -1,6 +1,7 @@
 use {
     crate::{types::*, VaultClient},
     anyhow::{anyhow, Result},
+    futures::future::try_join_all,
     soroban_client::xdr::ScVal,
     stellar_core::scval::{
         map_get_field, scval_to_address_string, scval_to_bool, scval_to_i128, scval_to_string, scval_to_u32,
@@ -46,18 +47,21 @@ impl VaultReader<'_> {
     /// List all proposals (1..=proposal_count) with on-chain status.
     pub async fn list_proposals(&self) -> Result<Vec<ProposalSummary>> {
         let config = self.get_config().await?;
-        let mut out = Vec::with_capacity(config.proposal_count as usize);
-        for id in 1..=config.proposal_count {
-            let core = self.get_proposal(id).await?;
-            out.push(ProposalSummary {
-                id,
+        if config.proposal_count == 0 {
+            return Ok(vec![]);
+        }
+        let cores = try_join_all((1..=config.proposal_count).map(|id| self.get_proposal(id))).await?;
+        Ok(cores
+            .into_iter()
+            .enumerate()
+            .map(|(i, core)| ProposalSummary {
+                id: (i as u64) + 1,
                 proposal_type: core.proposal_type,
                 approval_count: core.approval_count,
                 rejection_count: core.rejection_count,
                 status: core.status_label().to_string(),
-            });
-        }
-        Ok(out)
+            })
+            .collect())
     }
 
     /// Pending proposals only (not executed, not rejected).

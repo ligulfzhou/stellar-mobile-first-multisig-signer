@@ -1,5 +1,7 @@
 pub mod config;
+pub mod factory;
 pub mod read;
+pub mod tx;
 pub mod types;
 pub mod write;
 
@@ -7,7 +9,7 @@ use {
     anyhow::Result,
     stellar_core::{network::Network, RpcClient},
 };
-pub use {config::*, read::VaultReader, types::*, write::VaultWriter};
+pub use {config::*, factory::FactoryClient, read::VaultReader, types::*, write::VaultWriter};
 
 /// High-level client for a single vault contract instance.
 pub struct VaultClient {

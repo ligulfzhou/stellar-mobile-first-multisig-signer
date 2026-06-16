@@ -20,3 +20,6 @@ uniffi = { workspace = true, features = ["cli"] }
 thiserror.workspace = true
 tokio.workspace = true
 anyhow.workspace = true
+
+[target.'cfg(target_os = "android")'.dependencies]
+openssl = { version = "0.10", features = ["vendored"] }

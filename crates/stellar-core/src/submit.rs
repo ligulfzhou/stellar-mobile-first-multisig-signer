@@ -46,13 +46,22 @@ pub async fn submit_signed_xdr(rpc_url: &str, network: Network, signed_xdr: &str
 }
 
 pub async fn poll_transaction(rpc_url: &str, hash: &str) -> Result<()> {
+    poll_transaction_return(rpc_url, hash).await.map(|_| ())
+}
+
+pub async fn poll_transaction_return(rpc_url: &str, hash: &str) -> Result<soroban_client::xdr::ScVal> {
+    use soroban_client::soroban_rpc::TransactionStatus;
+
     let server = rpc_server(rpc_url)?;
     for _ in 0..POLL_ATTEMPTS {
         tokio::time::sleep(POLL_INTERVAL).await;
         match server.get_transaction(hash).await {
             Ok(status) => {
                 if status.status == TransactionStatus::Success {
-                    return Ok(());
+                    let (_, return_value) = status
+                        .to_result_meta()
+                        .ok_or_else(|| anyhow!("transaction meta missing"))?;
+                    return return_value.ok_or_else(|| anyhow!("transaction returned no value"));
                 }
                 if status.status == TransactionStatus::Failed {
                     let reason = status

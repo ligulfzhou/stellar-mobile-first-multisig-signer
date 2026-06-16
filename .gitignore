@@ -7,3 +7,10 @@ contracts/target/
 *.secret
 
 Stellar_Vault-fork
+
+ios/Vendor/
+ios/VaultSigner.xcodeproj/
+android/.gradle/
+android/app/build/
+android/local.properties
+android/app/src/main/jniLibs/

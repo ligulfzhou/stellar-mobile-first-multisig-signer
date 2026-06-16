@@ -22,7 +22,8 @@ impl Network {
 
     pub fn default_rpc_url(self) -> &'static str {
         match self {
-            Network::Testnet => "https://soroban-testnet.stellar.org",
+            // Official SDF RPC is unreachable in some regions; Gateway.fm is a reliable public fallback.
+            Network::Testnet => "https://soroban-rpc.testnet.stellar.gateway.fm",
             Network::Mainnet => "https://soroban.stellar.org",
         }
     }

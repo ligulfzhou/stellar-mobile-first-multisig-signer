@@ -26,6 +26,30 @@ contract-build:
 contract-test:
     cd contracts && cargo test
 
+# Deploy factory + vault to testnet (requires funded `admin` identity)
+deploy-testnet:
+    bash scripts/deploy-testnet.sh
+
+# Full on-chain flow: fund → propose → approve → execute
+e2e-testnet:
+    bash scripts/e2e-testnet.sh
+
+# iOS: bindings + static libs + Xcode project (run after API changes)
+ios-setup:
+    bash scripts/generate-bindings.sh
+    bash scripts/build-ios-lib.sh
+    cd ios && xcodegen generate
+
+ios-lib:
+    bash scripts/build-ios-lib.sh
+
+# Android: bindings + arm64 .so
+android-setup:
+    bash scripts/android-setup.sh
+
+android-lib:
+    bash scripts/build-android-lib.sh
+
 # Build UniFFI library and generate Swift/Kotlin bindings
 ffi:
     cargo build -p vault-signer-ffi
