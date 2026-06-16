@@ -1,0 +1,15 @@
+[package]
+name = "vault-client"
+description = "Stellar Vault Soroban contract client (read + write)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+stellar-core = { path = "../stellar-core" }
+stellar-xdr.workspace = true
+stellar-strkey.workspace = true
+soroban-client.workspace = true
+anyhow.workspace = true
+tokio.workspace = true
+serde.workspace = true

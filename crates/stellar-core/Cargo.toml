@@ -1,0 +1,18 @@
+[package]
+name = "stellar-core"
+description = "Stellar key management, RPC, and Soroban transaction helpers"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+stellar-xdr.workspace = true
+stellar-strkey.workspace = true
+stellar-baselib.workspace = true
+soroban-client.workspace = true
+anyhow.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+bip39.workspace = true
+slip10_ed25519.workspace = true
+serde_json.workspace = true

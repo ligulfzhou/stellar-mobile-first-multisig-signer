@@ -1,0 +1,17 @@
+[package]
+name = "vault-signer-cli"
+description = "CLI for Stellar Vault mobile signer development"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "vault-signer"
+path = "src/main.rs"
+
+[dependencies]
+stellar-core = { path = "../stellar-core" }
+vault-client = { path = "../vault-client" }
+anyhow.workspace = true
+tokio.workspace = true
+clap.workspace = true
